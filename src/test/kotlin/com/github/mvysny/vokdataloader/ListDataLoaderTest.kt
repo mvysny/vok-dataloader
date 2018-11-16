@@ -15,7 +15,7 @@ class ListDataLoaderTest : DynaTest({
         test("fetch") {
             val dl = ListDataLoader(Person::class.java, listOf())
             expectList() { dl.fetch() }
-            expectList() { dl.fetch(range = 5000L..4999L) }
+            expectList() { dl.fetch(range = LongRange.EMPTY) }
             expectList() { dl.fetch(range = 5000L..6000L) }
             expectList() { dl.fetch(buildFilter { Person::name eq "John" }) }
             expectList() { dl.fetch(sortBy = listOf(Person::name.asc)) }
@@ -39,7 +39,7 @@ class ListDataLoaderTest : DynaTest({
             val dl = ListDataLoader(Person::class.java, list)
             expect(list) { dl.fetch() }
             expectList() { dl.fetch(range = 5000L..6000L) }
-            expectList() { dl.fetch(range = 5000L..4999L) }
+            expectList() { dl.fetch(range = LongRange.EMPTY) }
             expectList(list[5]) { dl.fetch(buildFilter { Person::name eq "name 5" }) }
             expect(list) { dl.fetch(sortBy = listOf(Person::name.asc)) }
             expect(list.reversed()) { dl.fetch(sortBy = listOf(Person::name.desc)) }
