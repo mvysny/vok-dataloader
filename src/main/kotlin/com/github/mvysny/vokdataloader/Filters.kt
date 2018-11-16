@@ -96,8 +96,9 @@ data class IsNotNullFilter<T: Any>(override val propertyName: DataLoaderProperty
  * @param startsWith the prefix, automatically appended with `%` when the SQL query is constructed. The 'starts-with' is matched
  * case-sensitive.
  */
-class LikeFilter<T: Any>(override val propertyName: DataLoaderPropertyName, private val startsWith: String) : BeanFilter<T>() {
-    override val value = "${startsWith.trim()}%"
+class LikeFilter<T: Any>(override val propertyName: DataLoaderPropertyName, startsWith: String) : BeanFilter<T>() {
+    val startsWith = startsWith.trim()
+    override val value = "${this.startsWith}%"
     override fun toString() = """$propertyName LIKE "$value""""
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -115,7 +116,7 @@ class LikeFilter<T: Any>(override val propertyName: DataLoaderPropertyName, priv
 
     override fun test(t: T): Boolean {
         val v = getValue(t) as? String ?: return false
-        return v.startsWith(startsWith.trim())
+        return v.startsWith(startsWith)
     }
 }
 
@@ -130,8 +131,9 @@ class LikeFilter<T: Any>(override val propertyName: DataLoaderPropertyName, priv
  * @param startsWith the prefix, automatically appended with `%` when the SQL query is constructed. The 'starts-with' is matched
  * case-insensitive.
  */
-class ILikeFilter<T: Any>(override val propertyName: DataLoaderPropertyName, private val startsWith: String) : BeanFilter<T>() {
-    override val value = "${startsWith.trim()}%"
+class ILikeFilter<T: Any>(override val propertyName: DataLoaderPropertyName, startsWith: String) : BeanFilter<T>() {
+    val startsWith = startsWith.trim()
+    override val value = "${this.startsWith}%"
     override fun toString() = """$propertyName ILIKE "$value""""
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -148,7 +150,7 @@ class ILikeFilter<T: Any>(override val propertyName: DataLoaderPropertyName, pri
     }
     override fun test(t: T): Boolean {
         val v = getValue(t) as? String ?: return false
-        return v.startsWith(startsWith.trim(), ignoreCase = true)
+        return v.startsWith(startsWith, ignoreCase = true)
     }
 }
 
