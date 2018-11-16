@@ -16,7 +16,7 @@ This is just an API:
 
 ## About the Data Loader
 
-The [DataLoader](src/main/kotlin/com/github/mvysny/vokdataloader/DataLoader.kt] is but a very simple interface:
+The [DataLoader](src/main/kotlin/com/github/mvysny/vokdataloader/DataLoader.kt) is but a very simple interface:
 
 ```kotlin
 interface DataLoader<T: Any> : Serializable {
