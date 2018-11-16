@@ -58,7 +58,7 @@ publishing {
     publications {
         create("mavenJava", MavenPublication::class.java).apply {
             groupId = project.group.toString()
-            this.artifactId = "vok-orm"
+            this.artifactId = "vok-dataloader"
             version = project.version.toString()
             pom {
                 description.set("VOK-DataLoader: The Paged/Filtered/Sorted DataLoader API")
