@@ -29,7 +29,7 @@ class ListDataLoader<T: Any>(val itemClass: Class<T>, val items: List<T>) : Data
     }
 
     private fun sort(list: List<T>, criteria: List<SortClause>): List<T> {
-        if (criteria.isEmpty()) return list
+        if (criteria.isEmpty() || list.isEmpty()) return list
         val comparator: Comparator<Any> = criteria.map { getComparator(it) } .toComparator()
         return list.sortedWith(comparator)
     }
