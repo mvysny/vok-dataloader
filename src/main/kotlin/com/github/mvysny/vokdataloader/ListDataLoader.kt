@@ -48,8 +48,9 @@ class ListDataLoader<T: Any>(val itemClass: Class<T>, val items: List<T>) : Data
         if (range.isEmpty()) return listOf()
         var list = filter(filter)
         list = sort(list, sortBy)
+        val rangeEndExclusive = range.endInclusive.coerceAtMost(Long.MAX_VALUE - 1) + 1
         return list.subList(range.start.coerceAtMost(list.size.toLong()).toInt(),
-                (range.endInclusive + 1).coerceAtMost(list.size.toLong()).toInt())
+                rangeEndExclusive.coerceAtMost(list.size.toLong()).toInt())
     }
 
     override fun toString() = "ListDataLoader($items)"

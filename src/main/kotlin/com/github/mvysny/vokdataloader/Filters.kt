@@ -128,7 +128,7 @@ class LikeFilter<T: Any>(override val propertyName: DataLoaderPropertyName, star
  * @param startsWith the prefix, automatically appended with `%` when the SQL query is constructed. The 'starts-with' is matched
  * case-insensitive.
  */
-class ILikeFilter<T: Any>(override val propertyName: DataLoaderPropertyName, startsWith: String) : BeanFilter<T>() {
+class ILikeFilter<T: Any>(override val propertyName: DataLoaderPropertyName, private val startsWith: String) : BeanFilter<T>() {
     override val value = "${startsWith.trim()}%"
     override fun toString() = """$propertyName ILIKE "$value""""
     override fun equals(other: Any?): Boolean {
@@ -146,7 +146,7 @@ class ILikeFilter<T: Any>(override val propertyName: DataLoaderPropertyName, sta
     }
     override fun test(t: T): Boolean {
         val v = getValue(t) as? String ?: return false
-        return v.startsWith(value, ignoreCase = true)
+        return v.startsWith(startsWith.trim(), ignoreCase = true)
     }
 }
 

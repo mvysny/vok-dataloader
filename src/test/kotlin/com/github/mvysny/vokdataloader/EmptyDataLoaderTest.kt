@@ -15,6 +15,7 @@ class EmptyDataLoaderTest : DynaTest({
         val dl = EmptyDataLoader<Person>()
         expectList() { dl.fetch() }
         expectList() { dl.fetch(range = 5000L..6000L) }
+        expectList() { dl.fetch(range = 5000L..4999L) }
         expectList() { dl.fetch(buildFilter { Person::name eq "John" }) }
         expectList() { dl.fetch(sortBy = listOf(Person::name.asc)) }
         expectList() { dl.fetch(buildFilter { Person::name eq "John" }, range = 5000L..6000L) }
