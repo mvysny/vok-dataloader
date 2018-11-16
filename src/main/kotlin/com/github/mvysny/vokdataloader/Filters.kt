@@ -30,7 +30,7 @@ interface Filter<T: Any> : Serializable, Predicate<T> {
  * @property value optional value to compare against.
  */
 abstract class BeanFilter<T: Any> : Filter<T> {
-    abstract val propertyName: String
+    abstract val propertyName: DataLoaderPropertyName
     abstract val value: Any?
     @Transient
     private var getter: Method? = null
@@ -51,7 +51,7 @@ abstract class BeanFilter<T: Any> : Filter<T> {
 /**
  * A filter which tests for value equality. Allows nulls.
  */
-data class EqFilter<T: Any>(override val propertyName: String, override val value: Any?) : BeanFilter<T>() {
+data class EqFilter<T: Any>(override val propertyName: DataLoaderPropertyName, override val value: Any?) : BeanFilter<T>() {
     override fun toString() = "$propertyName = $value"
     override fun test(t: T): Boolean = getValue(t) == value
 }
@@ -67,18 +67,18 @@ enum class CompareOperator(val sql92Operator: String) : BiPredicate<Comparable<A
 /**
  * A filter which supports less than, less or equals than, etc. Filters out null values.
  */
-data class OpFilter<T: Any>(override val propertyName: String, override val value: Comparable<Any>, val operator: CompareOperator) : BeanFilter<T>() {
+data class OpFilter<T: Any>(override val propertyName: DataLoaderPropertyName, override val value: Comparable<Any>, val operator: CompareOperator) : BeanFilter<T>() {
     override fun toString() = "$propertyName ${operator.sql92Operator} $value"
     @Suppress("UNCHECKED_CAST")
     override fun test(t: T): Boolean = operator.test(t as Comparable<Any>, value)
 }
 
-data class IsNullFilter<T: Any>(override val propertyName: String) : BeanFilter<T>() {
+data class IsNullFilter<T: Any>(override val propertyName: DataLoaderPropertyName) : BeanFilter<T>() {
     override val value: Any? = null
     override fun test(t: T): Boolean = getValue(t) == null
 }
 
-data class IsNotNullFilter<T: Any>(override val propertyName: String) : BeanFilter<T>() {
+data class IsNotNullFilter<T: Any>(override val propertyName: DataLoaderPropertyName) : BeanFilter<T>() {
     override fun test(t: T): Boolean = getValue(t) != null
     override val value: Any? = null
 }
@@ -94,7 +94,7 @@ data class IsNotNullFilter<T: Any>(override val propertyName: String) : BeanFilt
  * @param startsWith the prefix, automatically appended with `%` when the SQL query is constructed. The 'starts-with' is matched
  * case-sensitive.
  */
-class LikeFilter<T: Any>(override val propertyName: String, startsWith: String) : BeanFilter<T>() {
+class LikeFilter<T: Any>(override val propertyName: DataLoaderPropertyName, startsWith: String) : BeanFilter<T>() {
     override val value = "${startsWith.trim()}%"
     override fun toString() = """$propertyName LIKE "$value""""
     override fun equals(other: Any?): Boolean {
@@ -128,7 +128,7 @@ class LikeFilter<T: Any>(override val propertyName: String, startsWith: String) 
  * @param startsWith the prefix, automatically appended with `%` when the SQL query is constructed. The 'starts-with' is matched
  * case-insensitive.
  */
-class ILikeFilter<T: Any>(override val propertyName: String, startsWith: String) : BeanFilter<T>() {
+class ILikeFilter<T: Any>(override val propertyName: DataLoaderPropertyName, startsWith: String) : BeanFilter<T>() {
     override val value = "${startsWith.trim()}%"
     override fun toString() = """$propertyName ILIKE "$value""""
     override fun equals(other: Any?): Boolean {
