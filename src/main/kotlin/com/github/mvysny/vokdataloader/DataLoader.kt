@@ -3,18 +3,23 @@ package com.github.mvysny.vokdataloader
 import java.io.Serializable
 
 /**
- * Provides paged access to instances of bean of type [T]. Typically provides data for some kind of a scrollable/paged table.
- *
- * The data loader takes a data row and converts it into a Java Bean. For example, a SQL data loader will run SELECT, take
+ * Accesses a pageable/filtrable/sortable native data set of some sort. For example, a SQL data loader will run SELECT, take
  * the JDBC ResultSet and convert every row into a Java Bean. Another example would be a REST endpoint data loader which
  * takes a list of JSON maps and converts every row (=JSON map) into a Java Bean.
  *
+ * The native data set is expected to contain zero, one or more native data rows. The data loader retrieves native data rows
+ * and turns them into instances of bean of type [T] (one data row into one bean).
+ *
+ * Typically provides data for some kind of a scrollable/paged table, for example Vaadin Grid.
+ *
  * Implementor classes must document:
- * * What kind of properties they accept for filters and sort clauses,
+ * * What is the data row and what kind of backend this loader fetches data from;
  * * What is [NativePropertyName] for this data loader,
+ * * What kind of properties they accept for filters and sort clauses (what is the [DataLoaderPropertyName] set).
  * * How exactly [NativePropertyName]s (e.g. JSON map keys, or SQL SELECT column names) are mapped to Java Bean Properties,
  *   and what is the mechanism to possibly alter this mapping.
  * * Provide a proper [Any.toString] to inform what kind of items this data loader offers.
+ * * [Any.hashCode]/[Any.equals] are not important and may not be implemented.
  *
  * For more information on this topic see [NativePropertyName] and [DataLoaderPropertyName].
  */

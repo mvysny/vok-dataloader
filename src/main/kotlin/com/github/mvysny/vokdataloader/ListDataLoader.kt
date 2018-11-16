@@ -9,6 +9,8 @@ import java.util.concurrent.ConcurrentHashMap
  * The [NativePropertyName] is always the Java Bean Property name. The [DataLoaderPropertyName]s accepted for filters
  * and sort clauses are always the Java Bean Property names.
  *
+ * Uses identity as mapping: turns a Java Bean into ... well, Java Bean ;)
+ *
  * Thread-safe.
  */
 class ListDataLoader<T: Any>(val itemClass: Class<T>, val items: List<T>) : DataLoader<T> {
