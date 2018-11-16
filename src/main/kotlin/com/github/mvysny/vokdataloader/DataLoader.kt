@@ -10,9 +10,11 @@ import java.io.Serializable
  * takes a list of JSON maps and converts every row (=JSON map) into a Java Bean.
  *
  * Implementor classes must document:
- * * What kind of properties they accept for filters and sort clauses
+ * * What kind of properties they accept for filters and sort clauses,
+ * * What is [NativePropertyName] for this data loader,
  * * How exactly [NativePropertyName]s (e.g. JSON map keys, or SQL SELECT column names) are mapped to Java Bean Properties,
  *   and what is the mechanism to possibly alter this mapping.
+ * * Provide a proper [Any.toString] to inform what kind of items this data loader offers.
  *
  * For more information on this topic see [NativePropertyName] and [DataLoaderPropertyName].
  */
@@ -25,12 +27,20 @@ interface DataLoader<T: Any> : Serializable {
     fun getCount(filter: Filter<T>? = null): Long
 
     /**
-     * Fetches data from the back end. The items must match given [filter]
+     * Fetches data from the back end. The items must match given [filter], then be sorted according to given [sortBy]
+     * clause; then only return given [range] of that outcome.
+     *
+     * The `fetch()` function should never fail with e.g. `IndexOutOfBoundsException` if the range is out-of-bounds; instead
+     * it should simply return fewer items (or no items at all). It is the callee responsibility to input proper ranges
+     * according to the outcome of the [getCount] function.
+     *
      * @param filter optional filter which defines filtering to be used for counting the
      * number of items. If null all items are considered.
      * @param sortBy optionally sort the beans according to given criteria.
-     * @param range offset and limit to fetch
-     * @return a list of items matching the query, may be empty.
+     * @param range offset and limit to fetch. The range may be empty, in that case an empty list should simply be returned.
+     * The [LongRange.start] must be 0 or higher.
+     * @return a list of items matching the query, may be empty. It is allowed to return less items than requested by
+     * [range] if there is not enough items, or if the range is out of bounds etc.
      */
     fun fetch(filter: Filter<T>? = null, sortBy: List<SortClause> = listOf(), range: LongRange = 0..Long.MAX_VALUE): List<T>
 }
@@ -56,4 +66,6 @@ class FilteredDataLoader<T: Any>(val filter: Filter<T>, val delegate: DataLoader
 
     override fun fetch(filter: Filter<T>?, sortBy: List<SortClause>, range: LongRange): List<T> =
             delegate.fetch(and(filter), sortBy, range)
+
+    override fun toString(): String = "FilteredDataLoader($delegate, filter=$filter)"
 }

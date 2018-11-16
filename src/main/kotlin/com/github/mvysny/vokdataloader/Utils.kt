@@ -8,7 +8,7 @@ import java.lang.reflect.Method
  * property is write-only (it doesn't have a getter).
  */
 fun Class<*>.getGetter(propertyName: String): Method {
-    val propertyDescriptor = Introspector.getBeanInfo(this).propertyDescriptors.first { it.name == propertyName }
+    val propertyDescriptor = Introspector.getBeanInfo(this).propertyDescriptors.firstOrNull { it.name == propertyName }
             ?: throw IllegalStateException("Bean $this has no property $propertyName")
     return propertyDescriptor.readMethod
             ?: throw IllegalStateException("Bean $this has no readMethod for property $propertyDescriptor")
