@@ -76,11 +76,13 @@ data class OpFilter<T: Any>(override val propertyName: DataLoaderPropertyName, o
 data class IsNullFilter<T: Any>(override val propertyName: DataLoaderPropertyName) : BeanFilter<T>() {
     override val value: Any? = null
     override fun test(t: T): Boolean = getValue(t) == null
+    override fun toString(): String = "$propertyName IS NULL"
 }
 
 data class IsNotNullFilter<T: Any>(override val propertyName: DataLoaderPropertyName) : BeanFilter<T>() {
     override fun test(t: T): Boolean = getValue(t) != null
     override val value: Any? = null
+    override fun toString(): String = "$propertyName IS NOT NULL"
 }
 
 /**
@@ -94,7 +96,7 @@ data class IsNotNullFilter<T: Any>(override val propertyName: DataLoaderProperty
  * @param startsWith the prefix, automatically appended with `%` when the SQL query is constructed. The 'starts-with' is matched
  * case-sensitive.
  */
-class LikeFilter<T: Any>(override val propertyName: DataLoaderPropertyName, startsWith: String) : BeanFilter<T>() {
+class LikeFilter<T: Any>(override val propertyName: DataLoaderPropertyName, private val startsWith: String) : BeanFilter<T>() {
     override val value = "${startsWith.trim()}%"
     override fun toString() = """$propertyName LIKE "$value""""
     override fun equals(other: Any?): Boolean {
@@ -113,7 +115,7 @@ class LikeFilter<T: Any>(override val propertyName: DataLoaderPropertyName, star
 
     override fun test(t: T): Boolean {
         val v = getValue(t) as? String ?: return false
-        return v.startsWith(value)
+        return v.startsWith(startsWith.trim())
     }
 }
 
