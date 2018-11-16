@@ -1,4 +1,5 @@
 [![Powered By Vaadin on Kotlin](http://vaadinonkotlin.eu/iconography/vok_badge.svg)](http://vaadinonkotlin.eu)
+[![Build Status](https://travis-ci.org/mvysny/vok-dataloader.svg?branch=master)](https://travis-ci.org/mvysny/vok-dataloader)
 
 # VOK DataLoaders
 
