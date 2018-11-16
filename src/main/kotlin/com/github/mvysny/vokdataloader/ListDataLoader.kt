@@ -6,7 +6,7 @@ import java.util.concurrent.ConcurrentHashMap
 /**
  * A simple in-memory data loader which provides beans from given [items] list.
  *
- * The [NativePropertyName] is always the Java Bean Property names. The [DataLoaderPropertyName]s accepted for filters
+ * The [NativePropertyName] is always the Java Bean Property name. The [DataLoaderPropertyName]s accepted for filters
  * and sort clauses are always the Java Bean Property names.
  *
  * Thread-safe.
