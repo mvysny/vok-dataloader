@@ -13,3 +13,6 @@ fun Class<*>.getGetter(propertyName: String): Method {
     return propertyDescriptor.readMethod
             ?: throw IllegalStateException("Bean $this has no readMethod for property $propertyDescriptor")
 }
+
+val IntRange.length: Int get() = if (isEmpty()) 0 else endInclusive - start + 1
+val LongRange.length: Long get() = if (isEmpty()) 0 else endInclusive - start + 1
