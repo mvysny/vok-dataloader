@@ -7,11 +7,14 @@ import java.util.concurrent.ConcurrentHashMap
  * A simple in-memory data loader which provides beans from given [items] list.
  *
  * The [NativePropertyName] is always the Java Bean Property name. The [DataLoaderPropertyName]s accepted for filters
- * and sort clauses are always the Java Bean Property names.
+ * and sort clauses are always the Java Bean Property names. Only valid Bean Property Names for bean of type [itemClass]
+ * may be passed in.
  *
  * Uses identity as mapping: turns a Java Bean into ... well, Java Bean ;)
  *
  * Thread-safe.
+ * @property itemClass every item is of this type. Used to lookup getters for Java Bean Properties.
+ * @property items provide instances of these items.
  */
 class ListDataLoader<T: Any>(val itemClass: Class<T>, val items: List<T>) : DataLoader<T> {
 
@@ -59,8 +62,8 @@ class ListDataLoader<T: Any>(val itemClass: Class<T>, val items: List<T>) : Data
 }
 
 /**
- * Returns [ListDataLoader] which loads given list. It may not reflect on items added to the list post-construction
- * of the loader.
+ * Returns [ListDataLoader] which loads given list. It may not reflect items added to the list post-construction
+ * of the loader (e.g. it optimizes by returning [EmptyDataLoader] when called on an empty list).
  */
 inline fun <reified T: Any> List<T>.dataLoader(): DataLoader<T> = when {
     isEmpty() -> EmptyDataLoader()
