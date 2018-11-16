@@ -11,9 +11,10 @@ import java.io.Serializable
  *
  * Implementor classes must document:
  * * What kind of properties they accept for filters and sort clauses
- * * How exactly the data row properties (e.g. JSON map keys, or SQL SELECT column names) are mapped to Java Bean Properties.
+ * * How exactly [NativePropertyName]s (e.g. JSON map keys, or SQL SELECT column names) are mapped to Java Bean Properties,
+ *   and what is the mechanism to possibly alter this mapping.
  *
- * For more information on this topic see [NativePropertyName].
+ * For more information on this topic see [NativePropertyName] and [DataLoaderPropertyName].
  */
 interface DataLoader<T: Any> : Serializable {
     /**

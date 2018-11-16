@@ -5,50 +5,40 @@ package com.github.mvysny.vokdataloader
  *
  * For example:
  * * A SQL data loader loads from an outcome of a SQL SELECT, via JDBC's [java.sql.ResultSet]. The data row
- *   in this case is a single row in the SQL SELECT which is a collection of database columns. The properties are
+ *   in this case is a single row in the SQL SELECT which is a collection of database columns. The native property names are
  *   for example a database table column name (`PERSON_NAME`), or a column reference (`p.person_name` in
  *   `select p.person_name from Person p`.
  * * For a REST data loader this follows the REST endpoint naming scheme of the JSON maps returned via the GET.
  *   For example if the REST returns `[{"person_name": "John"}]`,
  *   then the row contains the property of `person_name`.
+ * * For an in-memory collection of Java Beans, the native property name is already the Java Bean Property name, and
+ *   therefore there is no distinction to [DataLoaderPropertyName] in this case.
  */
 typealias NativePropertyName = String
 
 /**
  * A name of a single property that the [DataLoader] accepts as a filter property name, or a sort clause property name.
- * Every [DataLoader] should support Java Bean Property names; in addition to that it may
- * additionally accept [NativePropertyName] as [DataLoaderPropertyName], to reference native properties in filters and
- * sort clauses. Every [DataLoader] must document what exactly he accepts (and what he doesn't accept).
  *
- * The data loader takes a data row and converts it into a Java Bean. It needs to map the data row native property names
- * and maps them to
- * Typically a data row is a collection of properties:
+ * Since the data loader takes a data row and converts it into a Java Bean, every [DataLoader] MUST support Java Bean Property names
+ * as [DataLoaderPropertyName]. In addition to that the DataLoader MAY decide to
+ * additionally accept [NativePropertyName]s as [DataLoaderPropertyName]s, to allow the user to reference native properties in filters and
+ * sort clauses which aren't mapped to the Java Bean.
+ * Every [DataLoader] MUST document what exactly he accepts (and what he doesn't accept).
  *
- * * Java Beans have a collection of Java Bean Properties: having `getFoo()` and optionally `setFoo()` forms a Java Bean Property.
- * Java Bean property is defined in the [java.beans.PropertyDescriptor] API.
- * * Kotlin classes are collections of [kotlin.reflect.KProperty] (which are also Java Bean Properties).
- * * A database record is a collection of values, one for every database table column.
- * * A JSON transferred over a REST is typically a JSON map, mapping property names to property values.
+ * For example:
  *
- * Typically all of the above data sources transfer the data rows into Java Beans, and therefore
- * it is strongly advised that the property name is almost always the Java Bean Property name. For example:
- *
- * * [vok-orm](https://github.com/mvysny/vok-orm) maps select outcome to Java/Kotlin class, therefore we could use Java Bean
- * Property names as the data row property name, however there is a catch:
- *     * The SQL databases can not create WHERE
- *       clauses based on aliases: [vok-orm issue 5](https://github.com/mvysny/vok-orm/issues/5). Therefore, we need to
- *       eventually transform the property name into the column name when constructing SQL SELECT queries. We can achieve that
- *       using an `@As` annotation on the Java Bean Property.
+ * * [vok-orm](https://github.com/mvysny/vok-orm) maps SQL SELECT outcome to Java/Kotlin class. It needs to map
+ * [DataLoaderPropertyName] to [NativePropertyName] manually (can't use SQL aliases to map [DataLoaderPropertyName] to [NativePropertyName]
+ * e.g. `select p.person_name as personName`) since SQL databases can not create WHERE
+ * clauses based on aliases: [vok-orm issue 5](https://github.com/mvysny/vok-orm/issues/5). `vok-orm` is therefore
+ * using the `@As` annotation on the Java Bean Property. In addition however we must support sorting and filtering based on
+ * [NativePropertyName] to allow filtering on columns not returned/mapped to Java Bean; in this case the native property name
+ * is for example a database table column name (`PERSON_NAME`), or a column reference (`p.person_name` in
+ *   `select p.person_name from Person p`.
  * * [vok-rest-client](https://github.com/mvysny/vaadin-on-kotlin/tree/master/vok-rest-client) uses Gson to turn list of
  * JSON maps into a list of Java Beans. It is a good practice for the REST filter names and the sorting criteria property naming
  * to follow names of keys in the JSON maps, and hence we will most probably have a Java Bean Property for every filter
- * or sort clause we can have.
- *   * REST endpoints may decide to use the `lowercase_underscore` naming scheme; however that is the responsibility of
- *     the REST client (e.g. to configure Gson to use column name aliases, for example using the `@As` annotation).
- *
- * But what about unmapped properties? Surely we may need to sort SELECTs based on columns that aren't finally returned.
- * It is therefore the responsibility of the [DataLoader] to precisely define what exactly the property name is, without any doubt.
- * For example, a SQL database-backed [DataLoader] will support Java Bean Property names but also SQL column names or referrals
- * or any SQL expression that can go into the WHERE/ORDER BY clause.
+ * or sort clause we can have. REST endpoints may decide to use the `lowercase_underscore` (or any other) naming scheme;
+ * it is therefore the responsibility of REST data loader to e.g. to configure Gson to use column name aliases, for example using the `@As` annotation.
  */
 typealias DataLoaderPropertyName = String
