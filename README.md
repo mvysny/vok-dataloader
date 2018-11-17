@@ -80,3 +80,7 @@ JSON maps into a list of Java Beans. It is a good practice for the REST filter n
 to follow names of keys in the JSON maps, and hence we will most probably have a Java Bean Property for every filter
 or sort clause we can have. REST endpoints may decide to use the `lowercase_underscore` (or any other) naming scheme;
 it is therefore the responsibility of REST data loader to e.g. to configure Gson to use column name aliases, for example using the `@As` annotation.
+
+## Implementing Data Loader Tutorial
+
+Please find more documentation in [Accessing NoSQL or REST data sources](http://www.vaadinonkotlin.eu/nosql_rest_datasources.html).
