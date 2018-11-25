@@ -76,6 +76,15 @@ data class OpFilter<T: Any>(override val propertyName: DataLoaderPropertyName, o
     override fun test(t: T): Boolean = operator.test(getValue(t) as Comparable<Any>?, value)
 }
 
+data class InFilter<T: Any>(
+        override val propertyName: DataLoaderPropertyName,
+        override val value: Collection<Comparable<*>>
+) : BeanFilter<T>() {
+    override fun test(t: T): Boolean = value.contains(getValue(t))
+    override fun toString(): String =
+            value.joinToString(", ", prefix = "$propertyName in (", postfix = ")") { "'$it'" }
+}
+
 data class IsNullFilter<T: Any>(override val propertyName: DataLoaderPropertyName) : BeanFilter<T>() {
     override val value: Any? = null
     override fun test(t: T): Boolean = getValue(t) == null
@@ -224,6 +233,8 @@ class SqlWhereBuilder<T: Any>(val clazz: Class<T>) {
     @Suppress("UNCHECKED_CAST")
     infix fun <R> KProperty1<T, R?>.gt(value: R): Filter<T> =
         OpFilter(name, value as Comparable<Any>, CompareOperator.gt)
+    @Suppress("UNCHECKED_CAST")
+    infix fun <R> KProperty1<T, R>.`in`(value: R): Filter<T> = InFilter(name, value as Collection<Comparable<*>>)
 
     /**
      * A LIKE filter. It performs the 'starts-with' matching which tends to perform quite well on indexed columns. If you need a substring

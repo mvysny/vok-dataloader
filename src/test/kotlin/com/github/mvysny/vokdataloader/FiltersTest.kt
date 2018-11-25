@@ -14,6 +14,21 @@ class FiltersTest : DynaTest({
         expect("not (name = 'Name')") { not.toString() }
     }
 
+    test("in") {
+        val in1 = InFilter<Person>(Person::name.name, listOf("foo", "bar"))
+        expect("name in ('foo', 'bar')") { in1.toString() }
+        expect(true) { in1.test(Person("foo")) }
+        expect(true) { in1.test(Person("bar")) }
+        expect(false) { in1.test(Person("")) }
+        expect(false) { in1.test(Person("baz")) }
+
+        val in2 = InFilter<Person>(Person::name.name, listOf())
+        expect("name in ()") { in2.toString() }
+        expect(false) { in2.test(Person(name = "foo")) }
+        expect(false) { in2.test(Person(name = "")) }
+        expect(false) { in2.test(Person(name = null)) }
+    }
+
     test("like") {
         val like = LikeFilter<Person>(Person::name.name, "Name")
         expect(false) { like.test(Person("name 5")) }
