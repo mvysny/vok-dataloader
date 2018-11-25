@@ -22,6 +22,7 @@ import kotlin.reflect.KProperty1
 interface Filter<T: Any> : Serializable, Predicate<T> {
     infix fun and(other: Filter<in T>): Filter<T> = AndFilter(setOf(this, other))
     infix fun or(other: Filter<in T>): Filter<T> = OrFilter(setOf(this, other))
+    operator fun not(): Filter<T> = NotFilter(this)
 }
 
 /**
@@ -154,6 +155,11 @@ class ILikeFilter<T: Any>(override val propertyName: DataLoaderPropertyName, sta
         val v = getValue(t) as? String ?: return false
         return v.startsWith(startsWith, ignoreCase = true)
     }
+}
+
+class NotFilter<T: Any>(val child: Filter<in T>) : Filter<T> {
+    override fun toString() = "not ($child)"
+    override fun test(t: T): Boolean = ! child.test(t)
 }
 
 class AndFilter<T: Any>(children: Set<Filter<in T>>) : Filter<T> {

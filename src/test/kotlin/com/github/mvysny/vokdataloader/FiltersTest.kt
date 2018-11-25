@@ -4,6 +4,16 @@ import com.github.mvysny.dynatest.DynaTest
 import kotlin.test.expect
 
 class FiltersTest : DynaTest({
+    test("not") {
+        val eq = EqFilter<Person>(Person::name.name, "Name")
+        val not = NotFilter(eq)
+
+        expect(true) { not.test(Person("Name 5")) }
+        expect(false) { not.test(Person("Name")) }
+
+        expect("not (name = 'Name')") { not.toString() }
+    }
+
     test("like") {
         val like = LikeFilter<Person>(Person::name.name, "Name")
         expect(false) { like.test(Person("name 5")) }
