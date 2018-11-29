@@ -12,7 +12,7 @@ if (localProperties.exists()) {
 
 plugins {
     id("org.jetbrains.kotlin.jvm") version "1.3.10"
-    id("com.jfrog.bintray") version "1.8.4"
+    id("com.jfrog.bintray") version "1.8.3"
     `maven-publish`
     id("org.jetbrains.dokka") version "0.9.17"
 }
@@ -34,7 +34,7 @@ dependencies {
     compile("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
     // tests
-    testCompile("com.github.mvysny.dynatest:dynatest-engine:0.12")
+    testCompile("com.github.mvysny.dynatest:dynatest-engine:0.13")
 }
 
 val java: JavaPluginConvention = convention.getPluginByName("java")
