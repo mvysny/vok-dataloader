@@ -173,4 +173,27 @@ class FiltersTest : DynaTest({
             expect("(name < 'John' or age >= '5')") { buildFilter<Person> { (Person::name lt "John") or (Person::age ge 5) } .toString() }
         }
     }
+
+    test("and") {
+        val and = buildFilter<Person> { (Person::name lt "Name") and (Person::age ge 5) }
+        expect(false) { and.test(Person("name 5", 2)) }
+        expect(false) { and.test(Person("name 5", 10)) }
+        expect(false) { and.test(Person("Na", 2)) }
+        expect(true) { and.test(Person("Na", 5)) }
+        expect(true) { and == buildFilter<Person> { (Person::name lt "Name") and (Person::age ge 5) } }
+        expect(false) { and == buildFilter<Person> { (Person::name lt "Name") and (Person::age ge 10) } }
+        expect(false) { and == buildFilter<Person> { (Person::name lt "Name a") and (Person::age ge 5) } }
+    }
+
+    test("or") {
+        val or = buildFilter<Person> { (Person::name lt "Name") or (Person::age ge 5) }
+        expect(false) { or.test(Person("name 5", 2)) }
+        expect(true) { or.test(Person("name 5", 10)) }
+        expect(true) { or.test(Person("Na", 2)) }
+        expect(true) { or.test(Person("Na", 5)) }
+        expect(true) { or == buildFilter<Person> { (Person::name lt "Name") or (Person::age ge 5) } }
+        expect(false) { or == buildFilter<Person> { (Person::name lt "Name") and (Person::age ge 5) } }
+        expect(false) { or == buildFilter<Person> { (Person::name lt "Name") or (Person::age ge 10) } }
+        expect(false) { or == buildFilter<Person> { (Person::name lt "Name a") or (Person::age ge 5) } }
+    }
 })
