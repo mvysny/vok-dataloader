@@ -25,8 +25,8 @@ interface Filter<T: Any> : Serializable, Predicate<T> {
 }
 
 /**
- * Filters beans by comparing given [propertyName] to some expected [value]. Check out implementors for further details.
- * @property propertyName the bean property name ([KProperty1.name]).
+ * Filters beans by comparing a property value with given [propertyName] to some expected [value]. Check out implementors for further details.
+ * @property propertyName a valid data loader property name. See [DataLoaderPropertyName] for a precise definition.
  * @property value optional value to compare against.
  */
 abstract class BeanFilter<T: Any> : Filter<T> {
@@ -75,12 +75,20 @@ data class OpFilter<T: Any>(override val propertyName: DataLoaderPropertyName, o
     override fun test(t: T): Boolean = operator.test(getValue(t) as Comparable<Any>?, value)
 }
 
+/**
+ * Checks that property value is null.
+ */
 data class IsNullFilter<T: Any>(override val propertyName: DataLoaderPropertyName) : BeanFilter<T>() {
     override val value: Any? = null
     override fun test(t: T): Boolean = getValue(t) == null
     override fun toString(): String = "$propertyName IS NULL"
 }
 
+/**
+ * Checks that the property value is not null.
+ *
+ * *Implementation detail*: [value] returns null even though this filter matches non-null values.
+ */
 data class IsNotNullFilter<T: Any>(override val propertyName: DataLoaderPropertyName) : BeanFilter<T>() {
     override fun test(t: T): Boolean = getValue(t) != null
     override val value: Any? = null
@@ -156,7 +164,14 @@ class ILikeFilter<T: Any>(override val propertyName: DataLoaderPropertyName, sta
     }
 }
 
+/**
+ * AND filter: matches item only when all [children] matches.
+ * @param children child filters, must not be empty.
+ */
 class AndFilter<T: Any>(children: Set<Filter<in T>>) : Filter<T> {
+    init {
+        check(children.isNotEmpty()) { "children: cannot be empty" }
+    }
     val children: Set<Filter<in T>> = children.flatMap { if (it is AndFilter) it.children else listOf(it) }.toSet()
     override fun toString() = children.joinToString(" and ", "(", ")")
     override fun equals(other: Any?): Boolean {
@@ -170,7 +185,14 @@ class AndFilter<T: Any>(children: Set<Filter<in T>>) : Filter<T> {
     override fun test(t: T): Boolean = children.all { it.test(t) }
 }
 
+/**
+ * OR filter: matches item only when at least one of [children] matches.
+ * @param children child filters, must not be empty.
+ */
 class OrFilter<T: Any>(children: Set<Filter<in T>>) : Filter<T> {
+    init {
+        check(children.isNotEmpty()) { "children: cannot be empty" }
+    }
     val children: Set<Filter<in T>> = children.flatMap { if (it is OrFilter) it.children else listOf(it) }.toSet()
     override fun toString() = children.joinToString(" or ", "(", ")")
     override fun equals(other: Any?): Boolean {
@@ -184,11 +206,19 @@ class OrFilter<T: Any>(children: Set<Filter<in T>>) : Filter<T> {
     override fun test(t: T): Boolean = children.any { it.test(t) }
 }
 
+/**
+ * ANDs given set of filters and produces an [AndFilter].
+ * @return ANDed filters; `null` when receiver is empty; if receiver contains exactly one filter, that filter is simply returned.
+ */
 fun <T: Any> Set<Filter<T>>.and(): Filter<T>? = when (size) {
     0 -> null
     1 -> first()
     else -> AndFilter(this)
 }
+/**
+ * ORs given set of filters and produces an [OrFilter].
+ * @return ORed filters; `null` when receiver is empty; if receiver contains exactly one filter, that filter is simply returned.
+ */
 fun <T: Any> Set<Filter<T>>.or(): Filter<T>? = when (size) {
     0 -> null
     1 -> first()
@@ -268,6 +298,7 @@ class SqlWhereBuilder<T: Any>(val clazz: Class<T>) {
  */
 data class NativeSqlFilter<T: Any>(val where: String, val params: Map<String, Any?>) : Filter<T> {
     override fun test(t: T): Boolean = throw UnsupportedOperationException("Does not support in-memory filtering")
+    override fun toString() = "$where$params"
 }
 
 /**

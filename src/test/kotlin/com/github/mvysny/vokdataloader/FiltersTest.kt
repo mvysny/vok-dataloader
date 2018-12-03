@@ -156,4 +156,21 @@ class FiltersTest : DynaTest({
             expect(false) { eq == OpFilter<Person>(Person::name.name, "Name", CompareOperator.eq) }
         }
     }
+
+    group("build filter") {
+        test("bean filters") {
+            expect("name = '5'") { buildFilter<Person> { Person::name eq 5 } .toString() }
+            expect("name < '5'") { buildFilter<Person> { Person::name lt 5 } .toString() }
+            expect("name > '5'") { buildFilter<Person> { Person::name gt 5 } .toString() }
+            expect("name >= '5'") { buildFilter<Person> { Person::name ge 5 } .toString() }
+            expect("name LIKE 'foo%'") { buildFilter<Person> { Person::name like "foo" } .toString() }
+            expect("name ILIKE 'bar%'") { buildFilter<Person> { Person::name ilike "bar" } .toString() }
+            expect("name >= :foo{foo=foo}") { buildFilter<Person> { "name >= :foo"("foo" to "foo") } .toString() }
+        }
+
+        test("composed filters") {
+            expect("(name < 'John' and age >= '5')") { buildFilter<Person> { (Person::name lt "John") and (Person::age ge 5) } .toString() }
+            expect("(name < 'John' or age >= '5')") { buildFilter<Person> { (Person::name lt "John") or (Person::age ge 5) } .toString() }
+        }
+    }
 })
