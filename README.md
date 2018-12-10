@@ -5,15 +5,17 @@
 
 # VOK DataLoaders
 
-A simple API tailored to fetch data from various backend systems, via
-variety of APIs, so that the data can be shown in a table UI component, for example
-in a Vaadin Grid.
+A simple API which unifies paged/sorted/filtered data fetching from backend systems.
+The API targets the following use-cases:
 
-This is just an API:
+* Fetched data can be shown in a table UI component which fetches pages of data, for example the [Vaadin Grid](https://vaadin.com/components/vaadin-grid).
+The user can then sort/filter data, e.g. simply by clicking the table column header.
 
-* See [vok-orm](https://github.com/mvysny/vok-orm) for a data loader loading
+This library defines just the API. For concrete implementation please see the following projects:
+
+* [vok-orm](https://github.com/mvysny/vok-orm) for a data loader loading
   entities from a SQL database;
-* See [vok-rest-client](https://github.com/mvysny/vaadin-on-kotlin/tree/master/vok-rest-client)
+* [vok-rest-client](https://github.com/mvysny/vaadin-on-kotlin/tree/master/vok-rest-client)
   for a data loader loading entities from a REST server.
 
 ## About the Data Loader

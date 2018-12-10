@@ -1,6 +1,7 @@
 package com.github.mvysny.vokdataloader
 
 import com.github.mvysny.dynatest.DynaTest
+import kotlin.test.assertFailsWith
 import kotlin.test.expect
 
 class FiltersTest : DynaTest({
@@ -15,18 +16,29 @@ class FiltersTest : DynaTest({
     }
 
     test("in") {
-        val in1 = InFilter<Person>(Person::name.name, listOf("foo", "bar"))
-        expect("name in ('foo', 'bar')") { in1.toString() }
-        expect(true) { in1.test(Person("foo")) }
-        expect(true) { in1.test(Person("bar")) }
+        val in1 = InFilter<Person>(Person::name.name, listOf("Name", "name 5"))
+        expect("name in ('Name', 'name 5')") { in1.toString() }
+        expect(true) { in1.test(Person("Name")) }
+        expect(true) { in1.test(Person("name 5")) }
+        expect(false) { in1.test(Person("name")) }
+        expect(false) { in1.test(Person("Name 5")) }
+        expect(false) { in1.test(Person("Na")) }
+        expect(false) { in1.test(Person("na")) }
         expect(false) { in1.test(Person("")) }
-        expect(false) { in1.test(Person("baz")) }
+        expect(false) { in1.test(Person(null)) }
 
-        val in2 = InFilter<Person>(Person::name.name, listOf())
-        expect("name in ()") { in2.toString() }
-        expect(false) { in2.test(Person(name = "foo")) }
-        expect(false) { in2.test(Person(name = "")) }
-        expect(false) { in2.test(Person(name = null)) }
+        val in2 = InFilter<Person>(Person::name.name, listOf("name"))
+        expect("name in ('name')") { in2.toString() }
+        expect(true) { in2.test(Person("name")) }
+        expect(false) { in2.test(Person("name 5")) }
+        expect(false) { in2.test(Person("Name")) }
+        expect(false) { in2.test(Person("Na")) }
+        expect(false) { in2.test(Person("na")) }
+        expect(false) { in1.test(Person(null)) }
+
+        assertFailsWith(IllegalStateException::class) {
+            InFilter<Person>(Person::name.name, listOf())
+        }
     }
 
     test("like") {
@@ -180,5 +192,45 @@ class FiltersTest : DynaTest({
             expect(false) { eq == OpFilter<Person>(Person::name.name, "namea", CompareOperator.gt) }
             expect(false) { eq == OpFilter<Person>(Person::name.name, "Name", CompareOperator.eq) }
         }
+    }
+
+    group("build filter") {
+        test("bean filters") {
+            expect("name = '5'") { buildFilter<Person> { Person::name eq 5 } .toString() }
+            expect("name < '5'") { buildFilter<Person> { Person::name lt 5 } .toString() }
+            expect("name > '5'") { buildFilter<Person> { Person::name gt 5 } .toString() }
+            expect("name >= '5'") { buildFilter<Person> { Person::name ge 5 } .toString() }
+            expect("name LIKE 'foo%'") { buildFilter<Person> { Person::name like "foo" } .toString() }
+            expect("name ILIKE 'bar%'") { buildFilter<Person> { Person::name ilike "bar" } .toString() }
+            expect("name >= :foo{foo=foo}") { buildFilter<Person> { "name >= :foo"("foo" to "foo") } .toString() }
+        }
+
+        test("composed filters") {
+            expect("(name < 'John' and age >= '5')") { buildFilter<Person> { (Person::name lt "John") and (Person::age ge 5) } .toString() }
+            expect("(name < 'John' or age >= '5')") { buildFilter<Person> { (Person::name lt "John") or (Person::age ge 5) } .toString() }
+        }
+    }
+
+    test("and") {
+        val and = buildFilter<Person> { (Person::name lt "Name") and (Person::age ge 5) }
+        expect(false) { and.test(Person("name 5", 2)) }
+        expect(false) { and.test(Person("name 5", 10)) }
+        expect(false) { and.test(Person("Na", 2)) }
+        expect(true) { and.test(Person("Na", 5)) }
+        expect(true) { and == buildFilter<Person> { (Person::name lt "Name") and (Person::age ge 5) } }
+        expect(false) { and == buildFilter<Person> { (Person::name lt "Name") and (Person::age ge 10) } }
+        expect(false) { and == buildFilter<Person> { (Person::name lt "Name a") and (Person::age ge 5) } }
+    }
+
+    test("or") {
+        val or = buildFilter<Person> { (Person::name lt "Name") or (Person::age ge 5) }
+        expect(false) { or.test(Person("name 5", 2)) }
+        expect(true) { or.test(Person("name 5", 10)) }
+        expect(true) { or.test(Person("Na", 2)) }
+        expect(true) { or.test(Person("Na", 5)) }
+        expect(true) { or == buildFilter<Person> { (Person::name lt "Name") or (Person::age ge 5) } }
+        expect(false) { or == buildFilter<Person> { (Person::name lt "Name") and (Person::age ge 5) } }
+        expect(false) { or == buildFilter<Person> { (Person::name lt "Name") or (Person::age ge 10) } }
+        expect(false) { or == buildFilter<Person> { (Person::name lt "Name a") or (Person::age ge 5) } }
     }
 })
