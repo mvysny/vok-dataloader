@@ -1,9 +1,46 @@
 package com.github.mvysny.vokdataloader
 
 import com.github.mvysny.dynatest.DynaTest
+import kotlin.test.assertFailsWith
 import kotlin.test.expect
 
 class FiltersTest : DynaTest({
+    test("not") {
+        val eq = EqFilter<Person>(Person::name.name, "Name")
+        val not = NotFilter(eq)
+
+        expect(true) { not.test(Person("Name 5")) }
+        expect(false) { not.test(Person("Name")) }
+
+        expect("not (name = 'Name')") { not.toString() }
+    }
+
+    test("in") {
+        val in1 = InFilter<Person>(Person::name.name, listOf("Name", "name 5"))
+        expect("name in ('Name', 'name 5')") { in1.toString() }
+        expect(true) { in1.test(Person("Name")) }
+        expect(true) { in1.test(Person("name 5")) }
+        expect(false) { in1.test(Person("name")) }
+        expect(false) { in1.test(Person("Name 5")) }
+        expect(false) { in1.test(Person("Na")) }
+        expect(false) { in1.test(Person("na")) }
+        expect(false) { in1.test(Person("")) }
+        expect(false) { in1.test(Person(null)) }
+
+        val in2 = InFilter<Person>(Person::name.name, listOf("name"))
+        expect("name in ('name')") { in2.toString() }
+        expect(true) { in2.test(Person("name")) }
+        expect(false) { in2.test(Person("name 5")) }
+        expect(false) { in2.test(Person("Name")) }
+        expect(false) { in2.test(Person("Na")) }
+        expect(false) { in2.test(Person("na")) }
+        expect(false) { in1.test(Person(null)) }
+
+        assertFailsWith(IllegalStateException::class) {
+            InFilter<Person>(Person::name.name, listOf())
+        }
+    }
+
     test("like") {
         val like = LikeFilter<Person>(Person::name.name, "Name")
         expect(false) { like.test(Person("name 5")) }

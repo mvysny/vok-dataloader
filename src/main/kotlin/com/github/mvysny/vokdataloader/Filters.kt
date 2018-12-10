@@ -22,6 +22,7 @@ import kotlin.reflect.KProperty1
 interface Filter<T: Any> : Serializable, Predicate<T> {
     infix fun and(other: Filter<in T>): Filter<T> = AndFilter(setOf(this, other))
     infix fun or(other: Filter<in T>): Filter<T> = OrFilter(setOf(this, other))
+    operator fun not(): Filter<T> = NotFilter(this)
 }
 
 /**
@@ -73,6 +74,25 @@ data class OpFilter<T: Any>(override val propertyName: DataLoaderPropertyName, o
     override fun toString() = "$propertyName ${operator.sql92Operator} $formattedValue"
     @Suppress("UNCHECKED_CAST")
     override fun test(t: T): Boolean = operator.test(getValue(t) as Comparable<Any>?, value)
+}
+
+/**
+ * Checks if the [value]-collection contains the property value.
+ *
+ * The in-memory matching is performed based on Collections.contains, other data providers may specify different
+ * criteria for equality.
+ * @param value The collection to check against, must not be empty.
+ */
+data class InFilter<T: Any>(
+        override val propertyName: DataLoaderPropertyName,
+        override val value: Collection<Comparable<*>>
+) : BeanFilter<T>() {
+    init {
+        check(value.isNotEmpty()) { "value: cannot be empty" }
+    }
+    override fun test(t: T): Boolean = value.contains(getValue(t))
+    override fun toString(): String =
+            value.joinToString(", ", prefix = "$propertyName in (", postfix = ")") { "'$it'" }
 }
 
 /**
@@ -165,6 +185,15 @@ class ILikeFilter<T: Any>(override val propertyName: DataLoaderPropertyName, sta
 }
 
 /**
+ * NOT filter: negates the result of [child]
+ * @param child child filter
+ */
+class NotFilter<T: Any>(val child: Filter<in T>) : Filter<T> {
+    override fun toString() = "not ($child)"
+    override fun test(t: T): Boolean = ! child.test(t)
+}
+
+/**
  * AND filter: matches item only when all [children] matches.
  * @param children child filters, must not be empty.
  */
@@ -248,6 +277,8 @@ class SqlWhereBuilder<T: Any>(val clazz: Class<T>) {
     @Suppress("UNCHECKED_CAST")
     infix fun <R> KProperty1<T, R?>.gt(value: R): Filter<T> =
         OpFilter(name, value as Comparable<Any>, CompareOperator.gt)
+    @Suppress("UNCHECKED_CAST")
+    infix fun <R> KProperty1<T, R>.`in`(value: R): Filter<T> = InFilter(name, value as Collection<Comparable<*>>)
 
     /**
      * A LIKE filter. It performs the 'starts-with' matching which tends to perform quite well on indexed columns. If you need a substring
