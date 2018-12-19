@@ -44,9 +44,9 @@ inline fun <reified T: Any> List<T>.dataLoader(): DataLoader<T> = when {
  * Creates a [Comparator] which compares items of given [itemClass] by [SortClause.propertyName]. Reads the property
  * value using Java Reflection. Useful for doing in-memory comparisons.
  */
-fun SortClause.asComparator(itemClass: Class<*>): Comparator<Any?> {
+fun SortClause.getComparator(itemClass: Class<*>): Comparator<Any> {
     val getter = itemClass.getGetter(propertyName)
-    val comparator: Comparator<Any?> = nullsFirst(compareBy { bean -> getter.invoke(bean) as Comparable<*>? })
+    val comparator: Comparator<Any> = compareBy { bean -> getter.invoke(bean) as Comparable<*>? }
     return if (asc) comparator else comparator.reversed()
 }
 
@@ -54,12 +54,20 @@ fun SortClause.asComparator(itemClass: Class<*>): Comparator<Any?> {
  * Creates a [Comparator] which compares items by all comparators in this list. If the list is empty, the comparator
  * will always treat all items as equal and will return `0`.
  */
-fun <T> List<Comparator<T>>.toComparator() = Comparator<T> { o1, o2 ->
-    for (comparator in this@toComparator) {
-        val result = comparator.compare(o1, o2)
-        if (result != 0) return@Comparator result
+fun <T> List<Comparator<T>>.toComparator(): Comparator<T> = when {
+    isEmpty() -> Comparator { _, _ -> 0 }
+    size == 1 -> first()
+    else -> ComparatorList(this)
+}
+
+private class ComparatorList<T>(val comparators: List<Comparator<T>>) : Comparator<T> {
+    override fun compare(o1: T, o2: T): Int {
+        for (comparator in comparators) {
+            val result = comparator.compare(o1, o2)
+            if (result != 0) return result
+        }
+        return 0
     }
-    0
 }
 
 /**
@@ -69,7 +77,7 @@ fun <T> List<Comparator<T>>.toComparator() = Comparator<T> { o1, o2 ->
 fun <T> List<T>.sortedBy(criteria: List<SortClause>, itemClass: Class<T>): List<T> = when {
     criteria.isEmpty() || isEmpty() -> this
     else -> {
-        val comparator: Comparator<Any?> = criteria.map { it.asComparator(itemClass) } .toComparator()
-        sortedWith(comparator)
+        val comparator: Comparator<Any> = criteria.map { it.getComparator(itemClass) } .toComparator()
+        sortedWith(nullsFirst<Any>(comparator))
     }
 }
