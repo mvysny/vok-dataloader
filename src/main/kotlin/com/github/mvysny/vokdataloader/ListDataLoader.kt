@@ -1,8 +1,5 @@
 package com.github.mvysny.vokdataloader
 
-import java.lang.reflect.Method
-import java.util.concurrent.ConcurrentHashMap
-
 /**
  * A simple in-memory data loader which provides beans from given [items] list.
  *
@@ -22,37 +19,10 @@ class ListDataLoader<T: Any>(val itemClass: Class<T>, val items: List<T>) : Data
 
     override fun getCount(filter: Filter<T>?): Long = filter(filter).size.toLong()
 
-    private val getterCache = ConcurrentHashMap<DataLoaderPropertyName, Method>()
-    private fun getGetter(prop: DataLoaderPropertyName): Method =
-            getterCache.computeIfAbsent(prop) { itemClass.getGetter(prop) }
-
-    private val comparatorCache = ConcurrentHashMap<SortClause, Comparator<Any>>()
-    private fun getComparator(sortClause: SortClause): Comparator<Any> = comparatorCache.computeIfAbsent(sortClause) { it ->
-        val getter = getGetter(it.propertyName)
-        val comparator: Comparator<Any> = compareBy { bean -> getter.invoke(bean) as Comparable<*>? }
-        if (it.asc) comparator else comparator.reversed()
-    }
-
-    private fun sort(list: List<T>, criteria: List<SortClause>): List<T> {
-        if (criteria.isEmpty() || list.isEmpty()) return list
-        val comparator: Comparator<Any> = criteria.map { getComparator(it) } .toComparator()
-        return list.sortedWith(comparator)
-    }
-
-    private fun List<Comparator<Any>>.toComparator() = object : Comparator<Any> {
-        override fun compare(o1: Any?, o2: Any?): Int {
-            for (comparator in this@toComparator) {
-                val result = comparator.compare(o1, o2)
-                if (result != 0) return result
-            }
-            return 0
-        }
-    }
-
     override fun fetch(filter: Filter<T>?, sortBy: List<SortClause>, range: LongRange): List<T> {
         if (range.isEmpty()) return listOf()
         var list = filter(filter)
-        list = sort(list, sortBy)
+        list = list.sortedBy(sortBy, itemClass)
         val rangeEndExclusive = range.endInclusive.coerceAtMost(Long.MAX_VALUE - 1) + 1
         return list.subList(range.start.coerceAtMost(list.size.toLong()).toInt(),
                 rangeEndExclusive.coerceAtMost(list.size.toLong()).toInt())
@@ -68,4 +38,38 @@ class ListDataLoader<T: Any>(val itemClass: Class<T>, val items: List<T>) : Data
 inline fun <reified T: Any> List<T>.dataLoader(): DataLoader<T> = when {
     isEmpty() -> EmptyDataLoader()
     else -> ListDataLoader(T::class.java, this)
+}
+
+/**
+ * Creates a [Comparator] which compares items of given [itemClass] by [SortClause.propertyName]. Reads the property
+ * value using Java Reflection. Useful for doing in-memory comparisons.
+ */
+fun SortClause.asComparator(itemClass: Class<*>): Comparator<Any?> {
+    val getter = itemClass.getGetter(propertyName)
+    val comparator: Comparator<Any?> = nullsFirst(compareBy { bean -> getter.invoke(bean) as Comparable<*>? })
+    return if (asc) comparator else comparator.reversed()
+}
+
+/**
+ * Creates a [Comparator] which compares items by all comparators in this list. If the list is empty, the comparator
+ * will always treat all items as equal and will return `0`.
+ */
+fun <T> List<Comparator<T>>.toComparator() = Comparator<T> { o1, o2 ->
+    for (comparator in this@toComparator) {
+        val result = comparator.compare(o1, o2)
+        if (result != 0) return@Comparator result
+    }
+    0
+}
+
+/**
+ * Returns a copy of this list, sorted in-memory according to given [criteria]. [itemClass] is used for reflection so that we can obtain
+ * the values of given property for all beans.
+ */
+fun <T> List<T>.sortedBy(criteria: List<SortClause>, itemClass: Class<T>): List<T> = when {
+    criteria.isEmpty() || isEmpty() -> this
+    else -> {
+        val comparator: Comparator<Any?> = criteria.map { it.asComparator(itemClass) } .toComparator()
+        sortedWith(comparator)
+    }
 }
