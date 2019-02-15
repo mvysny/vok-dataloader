@@ -34,7 +34,7 @@ dependencies {
     compile(kotlin("stdlib-jdk8"))
 
     // tests
-    testCompile("com.github.mvysny.dynatest:dynatest-engine:0.13")
+    testCompile("com.github.mvysny.dynatest:dynatest-engine:0.14")
 }
 
 val java: JavaPluginConvention = convention.getPluginByName("java")
