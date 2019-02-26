@@ -3,7 +3,6 @@ package com.github.mvysny.vokdataloader
 import java.io.Serializable
 import java.lang.reflect.Method
 import java.util.function.BiPredicate
-import java.util.function.Predicate
 import kotlin.reflect.KProperty1
 
 /**
@@ -16,12 +15,19 @@ import kotlin.reflect.KProperty1
  * The [test] method is provided only as a convenience. There may be filters which can not implement this kind of method
  * (e.g. REST-server-specific filters, or filters representing a SQL where clause). Such filters should document this
  * behavior and may throw [UnsupportedOperationException] in the [test] method.
- * @param T the bean type upon which we will perform the filtering. This is not used by the filter directly, but it's required by [Predicate] which this
- * interface extends.
+ * @param T the bean type upon which we will perform the filtering.
  */
-interface Filter<T: Any> : Serializable, Predicate<T> {
+interface Filter<T: Any> : Serializable {
+    /**
+     * Evaluates this predicate on [t]. Returns `true` if the input argument matches the predicate, otherwise `false`
+     */
+    fun test(t: T): Boolean
+
     infix fun and(other: Filter<in T>): Filter<T> = AndFilter(setOf(this, other))
     infix fun or(other: Filter<in T>): Filter<T> = OrFilter(setOf(this, other))
+    /**
+     * Returns a filter that represents the logical negation of this filter.
+     */
     operator fun not(): Filter<T> = NotFilter(this)
 }
 
