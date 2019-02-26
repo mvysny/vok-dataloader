@@ -2,7 +2,6 @@ package com.github.mvysny.vokdataloader
 
 import java.io.Serializable
 import java.lang.reflect.Method
-import java.util.function.BiPredicate
 import kotlin.reflect.KProperty1
 
 /**
@@ -65,12 +64,13 @@ data class EqFilter<T: Any>(override val propertyName: DataLoaderPropertyName, o
     override fun test(t: T): Boolean = getValue(t) == value
 }
 
-enum class CompareOperator(val sql92Operator: String) : BiPredicate<Comparable<Any>?, Comparable<*>> {
+enum class CompareOperator(val sql92Operator: String) {
     eq("=") { override fun test(t: Comparable<Any>?, u: Comparable<*>) = t == u },
     lt("<") { override fun test(t: Comparable<Any>?, u: Comparable<*>) = t == null || t < u },
     le("<=") { override fun test(t: Comparable<Any>?, u: Comparable<*>) = t == null || t <= u },
     gt(">") { override fun test(t: Comparable<Any>?, u: Comparable<*>) = t != null && t > u },
-    ge(">=") { override fun test(t: Comparable<Any>?, u: Comparable<*>) = t != null && t >= u },
+    ge(">=") { override fun test(t: Comparable<Any>?, u: Comparable<*>) = t != null && t >= u };
+    abstract fun test(t: Comparable<Any>?, u: Comparable<*>): Boolean
 }
 
 /**
