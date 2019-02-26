@@ -31,10 +31,10 @@ tasks.withType<KotlinCompile> {
 }
 
 dependencies {
-    compile(kotlin("stdlib-jdk8"))
+    compile(kotlin("stdlib"))
 
     // tests
-    testCompile("com.github.mvysny.dynatest:dynatest-engine:0.14")
+    testCompile("com.github.mvysny.dynatest:dynatest-engine:0.15")
 }
 
 val java: JavaPluginConvention = convention.getPluginByName("java")
