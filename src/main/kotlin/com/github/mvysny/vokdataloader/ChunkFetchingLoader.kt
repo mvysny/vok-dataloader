@@ -2,16 +2,16 @@ package com.github.mvysny.vokdataloader
 
 /**
  * Overcomes a natural limit of the number of items which [delegate] can fetch (via [DataLoader.fetch]). If more items are requested,
- * this data loader polls delegate multiple times and reconstructs the result. Ideal for REST endpoints which are often
+ * this data loader polls the delegate in chunks and reconstructs the result. Ideal for REST endpoints which are often
  * limited in how many items they can fetch.
  * @property delegate the data loader which imposes limit on the number of data fetched
  * @property delegateFetchLimit the known limit of items which the delegate can fetch, 1 or more.
  */
-class FetchLimitOvercomer<T: Any>(val delegate: DataLoader<T>, val delegateFetchLimit: Long) : DataLoader<T> {
+class ChunkFetchingLoader<T: Any>(val delegate: DataLoader<T>, val delegateFetchLimit: Long) : DataLoader<T> {
     init {
         require(delegateFetchLimit >= 1) { "delegateFetchLimit should be 1 or more but was $delegateFetchLimit" }
     }
-    override fun toString() = "FetchLimitOvercomer(delegateFetchLimit=$delegateFetchLimit, delegate=$delegate)"
+    override fun toString() = "ChunkFetchingLoader(delegateFetchLimit=$delegateFetchLimit, delegate=$delegate)"
     override fun fetch(filter: Filter<T>?, sortBy: List<SortClause>, range: LongRange): List<T> {
         val result = mutableListOf<T>()
         while(result.size < range.length) {
@@ -32,9 +32,9 @@ class FetchLimitOvercomer<T: Any>(val delegate: DataLoader<T>, val delegateFetch
 
 /**
  * Overcomes a natural limit of the number of items which [this] can fetch (via [DataLoader.fetch]). If more items are requested,
- * the returned data loader polls [this] multiple times and reconstructs the result. Ideal for REST endpoints which are often
+ * the returned data loader polls [this] in chunks and reconstructs the result. Ideal for REST endpoints which are often
  * limited in how many items they can fetch.
  * @param delegateFetchLimit the known limit of items which the delegate can fetch, 1 or more.
  */
-fun <T: Any> DataLoader<T>.overcomeFetchLimit(delegateFetchLimit: Long): DataLoader<T> =
-        FetchLimitOvercomer(this, delegateFetchLimit)
+fun <T: Any> DataLoader<T>.limitChunkSize(delegateFetchLimit: Long): DataLoader<T> =
+        ChunkFetchingLoader(this, delegateFetchLimit)
